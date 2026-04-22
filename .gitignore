@@ -1,0 +1,22 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# 個人データ・バックアップ (リポジトリには含めない)
+nurse_shift_state.json
+_backups/
+_archive/
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# iCloud placeholder
+*.icloud
+
+# ログ
+*.log

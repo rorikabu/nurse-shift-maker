@@ -1,0 +1,14 @@
+[theme]
+# やわらかピンク × ミントの看護師テーマ
+primaryColor = "#F48FB1"               # 淡いピンク（メインアクセント）
+backgroundColor = "#FFF8FA"            # 薄いミルキーピンク
+secondaryBackgroundColor = "#FCE4EC"   # サイドバー・カード背景
+textColor = "#5C4856"                  # 落ち着いた茶ピンク
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
+
+[server]
+fileWatcherType = "none"
+headless = true
