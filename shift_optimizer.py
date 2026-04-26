@@ -11,6 +11,7 @@
 """
 
 import calendar
+import io
 import json
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -18,9 +19,28 @@ from pathlib import Path
 from typing import Optional
 
 import holidays
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 import pandas as pd
 import streamlit as st
 from ortools.sat.python import cp_model
+
+# 日本語フォント候補 (macOS / Linux / Streamlit Cloud で順に試す)
+_JP_FONT_CANDIDATES = [
+    "Noto Sans CJK JP", "Noto Sans JP",
+    "Hiragino Sans", "Hiragino Maru Gothic Pro",
+    "Yu Gothic", "Meiryo",
+    "IPAexGothic", "IPAGothic",
+    "DejaVu Sans",  # 最終フォールバック (日本語は出ないが落ちはしない)
+]
+_available_fonts = {f.name for f in fm.fontManager.ttflist}
+for _f in _JP_FONT_CANDIDATES:
+    if _f in _available_fonts:
+        plt.rcParams["font.family"] = _f
+        break
+plt.rcParams["axes.unicode_minus"] = False
 
 # ==========================================================
 # ページ設定
@@ -145,7 +165,7 @@ SHIFT_LABEL = {0: "休", 1: "日", 2: "夜", 3: "明"}
 
 # 看護師リストのスキーマ版数。カラム追加・選択肢変更時にインクリメントすると
 # 古いセッションのデータが自動的に初期化される。
-NURSE_DF_SCHEMA_VERSION = 4
+NURSE_DF_SCHEMA_VERSION = 6
 
 WEEKDAY_JP = ["月", "火", "水", "木", "金", "土", "日"]
 JP_HOLIDAYS = holidays.Japan()
@@ -176,14 +196,15 @@ def load_saved_state():
         return {}
 
 
-def save_state(nurse_df, off_requests_text, settings=None):
-    """看護師リスト・希望休・サイドバー設定を JSON で保存する。"""
+def save_state(nurse_df, off_requests_text, settings=None, weekday_df=None):
+    """看護師リスト・希望休・サイドバー設定・曜日別人員 を JSON で保存する。"""
     try:
         payload = {
             "schema_version": NURSE_DF_SCHEMA_VERSION,
             "nurses": nurse_df.to_dict(orient="records"),
             "off_requests_text": off_requests_text,
             "settings": settings or {},
+            "weekday_staffing": weekday_df.to_dict(orient="records") if weekday_df is not None else None,
         }
         STATE_FILE.write_text(
             json.dumps(payload, ensure_ascii=False, indent=2),
@@ -283,8 +304,8 @@ with st.sidebar:
     min_off = st.number_input("🌸 月間休日 下限（休のみ）", 4, 14, 8, key="min_off")
     max_off = st.number_input("🌸 月間休日 上限（休のみ）", 8, 20, 12, key="max_off",
                               help="この日数より多くの「休」を持てない。夜勤しない人の休過剰を防ぐ。")
-    min_workdays = st.number_input("📋 月間 最低勤務日数（日勤+夜勤）", 0, 25, 12, key="min_workdays",
-                                   help="1人あたり月の勤務日数(日+夜)の最低ライン。")
+    min_workdays = st.number_input("📋 月間 最低勤務日数（夜勤=2日換算・全体既定値）", 0, 40, 16, key="min_workdays",
+                                   help="1人あたり月の勤務日数の最低ライン。夜勤は2日(夜+明)としてカウント。看護師リスト「最低勤務日数」列で個別に上書き可。")
     max_ake_to_night = st.number_input("🌙 明け後夜勤 上限（月間・該当者のみ）", 0, 15, 3, key="max_ake_to_night",
                                        help="「明け後夜勤OK」がONのスタッフが、月のうち何回まで「明け→夜勤」パターンを取れるか。0にすると実質的に特例OFF。")
 
@@ -295,6 +316,7 @@ with st.sidebar:
 # 最適化ロジック
 # ==========================================================
 def build_and_solve(nurse_df, off_requests, *,
+                    weekday_df=None,
                     relax=None,
                     feasibility_only=False,
                     time_limit_s=None,
@@ -319,14 +341,24 @@ def build_and_solve(nurse_df, off_requests, *,
         for d in range(D):
             model.AddExactlyOne([x[n, d, s] for s in SHIFTS])
 
-    # 1日ごとの人数制約 (下限・上限)
+    # 1日ごとの人数制約 (下限・上限) — 曜日別設定があればそちらを優先
+    def _wd_value(wkd_idx, col, default):
+        if weekday_df is None:
+            return default
+        try:
+            v = int(weekday_df.loc[wkd_idx, col])
+            return v if v > 0 else default
+        except Exception:
+            return default
+
     for d in range(D):
+        wkd = date(year, month, d + 1).weekday()
         day_count = sum(x[n, d, SHIFT_DAY] for n in range(N))
         night_count = sum(x[n, d, SHIFT_NIGHT] for n in range(N))
-        model.Add(day_count >= min_day)
-        model.Add(day_count <= max_day)
-        model.Add(night_count >= min_night)
-        model.Add(night_count <= max_night)
+        model.Add(day_count >= _wd_value(wkd, "日勤 最低", min_day))
+        model.Add(day_count <= _wd_value(wkd, "日勤 上限", max_day))
+        model.Add(night_count >= _wd_value(wkd, "夜勤 最低", min_night))
+        model.Add(night_count <= _wd_value(wkd, "夜勤 上限", max_night))
 
     # 夜勤 → 翌日は必ず明け
     for n in range(N):
@@ -395,10 +427,18 @@ def build_and_solve(nurse_df, off_requests, *,
         model.Add(rest_n >= eff_min_off)
         model.Add(rest_n <= eff_max_off)
 
-    # 月間 最低勤務日数 (日勤 + 夜勤)
+    # 月間 最低勤務日数 (夜勤は2日換算: 夜勤+明け の2日分)
+    # = 日勤 + 2 * 夜勤 = 日勤 + 夜勤 + 明け
     for n in range(N):
-        work_n = sum(x[n, d, SHIFT_DAY] + x[n, d, SHIFT_NIGHT] for d in range(D))
-        model.Add(work_n >= eff_min_workdays)
+        per_min = nurse_df.loc[n, "最低勤務日数"]
+        try:
+            per_min = int(per_min)
+            if per_min <= 0:
+                per_min = eff_min_workdays  # 0以下は全体設定にフォールバック
+        except (TypeError, ValueError):
+            per_min = eff_min_workdays
+        work_n = sum(x[n, d, SHIFT_DAY] + 2 * x[n, d, SHIFT_NIGHT] for d in range(D))
+        model.Add(work_n >= per_min)
 
     # 連続勤務制限: 任意の (eff_max_consec + 1) 日窓に 1日以上「休 or 明」
     for n in range(N):
@@ -417,11 +457,12 @@ def build_and_solve(nurse_df, off_requests, *,
 
     if not feasibility_only:
         # 公平性: 勤務日数・夜勤回数・純粋な休の3軸でばらつきを最小化
-        workdays = [sum(x[n, d, SHIFT_DAY] + x[n, d, SHIFT_NIGHT] for d in range(D)) for n in range(N)]
+        # 勤務日数は夜勤を2日換算 (夜勤+明け) として計算
+        workdays = [sum(x[n, d, SHIFT_DAY] + 2 * x[n, d, SHIFT_NIGHT] for d in range(D)) for n in range(N)]
         nights = [sum(x[n, d, SHIFT_NIGHT] for d in range(D)) for n in range(N)]
         rests = [sum(x[n, d, SHIFT_REST] for d in range(D)) for n in range(N)]
-        max_wd = model.NewIntVar(0, D, "max_wd")
-        min_wd = model.NewIntVar(0, D, "min_wd")
+        max_wd = model.NewIntVar(0, 2 * D, "max_wd")
+        min_wd = model.NewIntVar(0, 2 * D, "min_wd")
         max_ng = model.NewIntVar(0, D, "max_ng")
         min_ng = model.NewIntVar(0, D, "min_ng")
         max_rt = model.NewIntVar(0, D, "max_rt")
@@ -510,7 +551,7 @@ def build_summary_df(solver, x, nurse_df):
         "休": [sum(solver.Value(x[n, d, SHIFT_REST]) for d in range(num_days)) for n in range(num_nurses)],
     }
     df = pd.DataFrame(data)
-    df["勤務計"] = df["日勤"] + df["夜勤"]
+    df["勤務計(夜=2)"] = df["日勤"] + df["夜勤"] * 2  # 夜勤=夜+明 で2日換算
     df["休日計"] = df["休"] + df["明け"]
     return df
 
@@ -627,12 +668,97 @@ def style_shift(val):
     return SHIFT_COLORS.get(val, "")
 
 
+def schedule_to_png_bytes(schedule_df, title=""):
+    """シフト表を PNG バイト列に変換 (画像保存用)。"""
+    # シフト→塗り色 (matplotlib 用に hex のみ)
+    cell_fill = {"日": "#B2DFDB", "夜": "#7E57C2", "明": "#FFE0B2", "休": "#F8BBD0"}
+    text_color = {"日": "#00695C", "夜": "#FFFFFF", "明": "#E65100", "休": "#AD1457"}
+
+    cols = list(schedule_df.columns)
+    n_cols = len(cols)
+    n_rows = len(schedule_df)
+    cell_w = 0.50  # inches
+    cell_h = 0.40
+    name_col_w = 1.4
+
+    fig_w = name_col_w + (n_cols - 1) * cell_w
+    fig_h = (n_rows + 1) * cell_h + 0.5  # +ヘッダ +タイトル
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+    ax.set_xlim(0, fig_w)
+    ax.set_ylim(0, fig_h)
+    ax.axis("off")
+    ax.invert_yaxis()
+
+    # タイトル
+    if title:
+        ax.text(fig_w / 2, 0.25, title, ha="center", va="center",
+                fontsize=12, fontweight="bold", color="#AD1457")
+
+    # ヘッダ行
+    y_header = 0.55
+    for j, col in enumerate(cols):
+        if j == 0:  # 氏名列
+            x = 0
+            w = name_col_w
+        else:
+            x = name_col_w + (j - 1) * cell_w
+            w = cell_w
+        head_color = "#FCE4EC"
+        text_clr = "#AD1457"
+        if j > 0:
+            if "(土" in col:
+                head_color = "#E3F2FD"; text_clr = "#1565C0"
+            if "(日" in col or "祝" in col:
+                head_color = "#FFEBEE"; text_clr = "#C62828"
+        ax.add_patch(plt.Rectangle((x, y_header), w, cell_h * 0.95,
+                                    facecolor=head_color, edgecolor="white", linewidth=1))
+        # ヘッダラベル: "1(金)" → "1\n金"
+        if j == 0:
+            label = col
+        else:
+            num, paren = col.split("(", 1)
+            paren = paren.rstrip(")").replace("・祝", "祝")
+            label = f"{num}\n{paren}"
+        ax.text(x + w / 2, y_header + cell_h / 2, label,
+                ha="center", va="center", fontsize=6, fontweight="bold", color=text_clr)
+
+    # データ行
+    for i, (_, row) in enumerate(schedule_df.iterrows()):
+        y = y_header + cell_h + i * cell_h
+        for j, col in enumerate(cols):
+            val = str(row[col]) if not pd.isna(row[col]) else ""
+            if j == 0:
+                x = 0; w = name_col_w
+                ax.add_patch(plt.Rectangle((x, y), w, cell_h * 0.95,
+                                            facecolor="#FFFFFF", edgecolor="#F8BBD0", linewidth=0.5))
+                ax.text(x + 0.1, y + cell_h / 2, val,
+                        ha="left", va="center", fontsize=7, color="#5C4856", fontweight="bold")
+            else:
+                x = name_col_w + (j - 1) * cell_w
+                w = cell_w
+                fill = cell_fill.get(val, "#FFFFFF")
+                tcol = text_color.get(val, "#000000")
+                ax.add_patch(plt.Rectangle((x, y), w, cell_h * 0.95,
+                                            facecolor=fill, edgecolor="white", linewidth=0.6))
+                ax.text(x + w / 2, y + cell_h / 2, val,
+                        ha="center", va="center", fontsize=7, fontweight="bold", color=tcol)
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=180, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+    return buf.getvalue()
+
+
 def render_schedule_html(schedule_df):
     """シフト表を横スクロール不要のコンパクトHTMLテーブルとして出力。"""
     css = """
     <style>
+    .shift-table-wrap {
+        overflow-x: auto; -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+    }
     .shift-table { border-collapse: separate; border-spacing: 3px; font-family: inherit;
-                   width: 100%; table-layout: fixed; }
+                   width: 100%; min-width: 1000px; table-layout: fixed; }
     .shift-table th, .shift-table td {
         text-align: center; padding: 8px 2px; font-size: 1em;
         border-radius: 8px;
@@ -647,13 +773,20 @@ def render_schedule_html(schedule_df):
         color: #5C4856; font-weight: 600; width: 90px;
         border-left: 3px solid #F48FB1;
         font-size: 0.95em;
+        position: sticky; left: 0; z-index: 2;
+        box-shadow: 2px 0 4px rgba(0,0,0,0.08);
     }
+    .shift-table thead th.name-col { z-index: 3; }
     .shift-table th.wkd-sat { color: #1565C0; background: #E3F2FD; }
     .shift-table th.wkd-sun, .shift-table th.holiday { color: #C62828; background: #FFEBEE; }
+    @media (max-width: 768px) {
+        .shift-table { min-width: 900px; }
+        .shift-table th, .shift-table td { font-size: 0.9em; padding: 6px 1px; }
+    }
     </style>
     """
 
-    html = css + '<div style="overflow-x:auto;"><table class="shift-table"><thead><tr>'
+    html = css + '<div class="shift-table-wrap"><table class="shift-table"><thead><tr>'
     for col in schedule_df.columns:
         if col == "氏名":
             html += '<th class="name-col">氏名</th>'
@@ -700,14 +833,30 @@ def render_pattern(solver_, status_, x_, label, nurse_df):
     st.markdown(render_schedule_html(schedule_df), unsafe_allow_html=True)
     st.subheader(f"📈 集計 — {label}")
     st.dataframe(summary_df, use_container_width=True, hide_index=True)
-    csv = schedule_df.to_csv(index=False).encode("utf-8-sig")
-    st.download_button(
-        f"📥 {label} CSVダウンロード",
-        csv,
-        file_name=f"shift_{year}_{month:02d}_{label.replace(' ', '_')}.csv",
-        mime="text/csv",
-        key=f"dl_{label}",
-    )
+    col_csv, col_img = st.columns(2)
+    with col_csv:
+        csv = schedule_df.to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            f"📥 {label} CSVダウンロード",
+            csv,
+            file_name=f"shift_{year}_{month:02d}_{label.replace(' ', '_')}.csv",
+            mime="text/csv",
+            key=f"dl_csv_{label}",
+            use_container_width=True,
+        )
+    with col_img:
+        try:
+            png_bytes = schedule_to_png_bytes(schedule_df, title=f"シフト表 {year}年{month}月 — {label}")
+            st.download_button(
+                f"🖼️ {label} 画像(PNG)ダウンロード",
+                png_bytes,
+                file_name=f"shift_{year}_{month:02d}_{label.replace(' ', '_')}.png",
+                mime="image/png",
+                key=f"dl_png_{label}",
+                use_container_width=True,
+            )
+        except Exception as e:
+            st.warning(f"画像生成に失敗: {e}")
 
 
 # ==========================================================
@@ -735,6 +884,9 @@ with tab_main:
             for col in ["夜勤可", "土日休", "明け後夜勤OK"]:
                 if col in df.columns:
                     df[col] = df[col].astype(bool)
+            if "最低勤務日数" in df.columns:
+                # None/NaN を保持できる Int64 nullable に変換
+                df["最低勤務日数"] = pd.to_numeric(df["最低勤務日数"], errors="coerce").astype("Int64")
             st.session_state.nurse_df = df
         else:
             st.session_state.nurse_df = pd.DataFrame({
@@ -743,6 +895,7 @@ with tab_main:
                 "夜勤可": [True] * num_nurses,
                 "土日休": [False] * num_nurses,
                 "明け後夜勤OK": [False] * num_nurses,
+                "最低勤務日数": pd.array([pd.NA] * num_nurses, dtype="Int64"),  # 未入力なら全体設定を使用
             })
         st.session_state.nurse_df_schema = NURSE_DF_SCHEMA_VERSION
     elif len(st.session_state.nurse_df) != num_nurses:
@@ -763,11 +916,61 @@ with tab_main:
             "夜勤可": st.column_config.CheckboxColumn(),
             "土日休": st.column_config.CheckboxColumn(help="ON にすると、その月の全ての土曜・日曜・祝日が必ず休みになります"),
             "明け後夜勤OK": st.column_config.CheckboxColumn(help="ON にすると、夜勤明けの翌日に夜勤を入れることが可能になります（特例）"),
+            "最低勤務日数": st.column_config.NumberColumn(min_value=0, max_value=40, step=1,
+                help="未入力（空欄）なら全体設定を使用。1以上にするとこの人だけ別の最低勤務日数（夜勤=2日換算）が適用される"),
         },
         use_container_width=True,
         hide_index=True,
         key="nurse_editor",
     )
+
+    st.subheader("📆 曜日別 必要人員（任意）")
+    st.caption("曜日ごとに「日勤・夜勤」の最低/上限人数を変えられる。空欄/0 ならサイドバーの全体値を使う。")
+
+    _na7 = lambda: pd.array([pd.NA] * 7, dtype="Int64")
+    weekday_default = pd.DataFrame({
+        "曜日": WEEKDAY_JP,
+        "日勤 最低": _na7(),
+        "日勤 上限": _na7(),
+        "夜勤 最低": _na7(),
+        "夜勤 上限": _na7(),
+    })
+    if "weekday_df" not in st.session_state or list(st.session_state.weekday_df["曜日"]) != WEEKDAY_JP:
+        # 保存済みからの復元を試みる
+        saved_wd = load_saved_state().get("weekday_staffing")
+        if saved_wd:
+            try:
+                df_wd = pd.DataFrame(saved_wd)
+                if list(df_wd["曜日"]) == WEEKDAY_JP:
+                    # 既存の数値列を nullable Int64 に変換（空欄を保持）
+                    for col in ["日勤 最低", "日勤 上限", "夜勤 最低", "夜勤 上限"]:
+                        if col in df_wd.columns:
+                            df_wd[col] = pd.to_numeric(df_wd[col], errors="coerce").astype("Int64")
+                    st.session_state.weekday_df = df_wd
+                else:
+                    st.session_state.weekday_df = weekday_default
+            except Exception:
+                st.session_state.weekday_df = weekday_default
+        else:
+            st.session_state.weekday_df = weekday_default
+
+    with st.expander("📆 曜日別 必要人員を設定する", expanded=False):
+        weekday_df = st.data_editor(
+            st.session_state.weekday_df,
+            num_rows="fixed",
+            column_config={
+                "曜日": st.column_config.TextColumn(disabled=True),
+                "日勤 最低": st.column_config.NumberColumn(min_value=0, max_value=15, step=1, help="未入力（空欄）なら全体値を使用"),
+                "日勤 上限": st.column_config.NumberColumn(min_value=0, max_value=15, step=1, help="未入力（空欄）なら全体値を使用"),
+                "夜勤 最低": st.column_config.NumberColumn(min_value=0, max_value=10, step=1, help="未入力（空欄）なら全体値を使用"),
+                "夜勤 上限": st.column_config.NumberColumn(min_value=0, max_value=10, step=1, help="未入力（空欄）なら全体値を使用"),
+            },
+            use_container_width=True,
+            hide_index=True,
+            key="weekday_editor",
+        )
+    # 上のexpanderを開いていない時はセッションから取得
+    weekday_df = st.session_state.get("weekday_df", weekday_default)
 
     st.subheader("🌸 希望休の入力")
     st.caption("休みたい日をカンマ区切りで入力してね（例: `3,10,22`）")
@@ -794,9 +997,9 @@ with tab_main:
                 st.error(f"{name}: 数字のみ入力してください")
                 off_requests[i] = []
 
-    # 看護師リスト・希望休・サイドバー設定を自動保存 (再読込で復元される)
+    # 看護師リスト・希望休・サイドバー設定・曜日別人員を自動保存 (再読込で復元される)
     current_settings = {k: st.session_state[k] for k in SIDEBAR_KEYS if k in st.session_state}
-    save_state(nurse_df, off_requests_text, current_settings)
+    save_state(nurse_df, off_requests_text, current_settings, weekday_df=weekday_df)
 
     st.divider()
     gen_two = st.checkbox("別パターン（パターンB）も同時に生成する", value=True,
@@ -804,7 +1007,7 @@ with tab_main:
 
     if st.button("✨ シフトを自動で作る ✨", type="primary", use_container_width=True):
         with st.spinner("最適化中..."):
-            solver, status, x = build_and_solve(nurse_df, off_requests)
+            solver, status, x = build_and_solve(nurse_df, off_requests, weekday_df=weekday_df)
 
         if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             # パターンA の割当を辞書化（パターンB の制約用）
@@ -819,6 +1022,7 @@ with tab_main:
                 with st.spinner("別パターン (B) を生成中..."):
                     solver_b, status_b, x_b = build_and_solve(
                         nurse_df, off_requests,
+                        weekday_df=weekday_df,
                         forbidden_solution=first_assignment,
                         time_limit_s=8.0,
                     )

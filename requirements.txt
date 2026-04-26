@@ -2,3 +2,4 @@ streamlit>=1.30
 pandas>=2.0
 ortools>=9.8
 holidays>=0.95
+matplotlib>=3.7
