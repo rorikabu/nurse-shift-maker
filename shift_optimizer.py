@@ -1104,15 +1104,6 @@ with tab_main:
             off_requests[i] = _parse_days(s_must, name, "絶対")
             off_requests_pref[i] = _parse_days(s_pref, name, "できれば")
 
-    # 看護師リスト・希望休・サイドバー設定・曜日別人員・夜勤NGペアを自動保存 (再読込で復元される)
-    current_settings = {k: st.session_state[k] for k in SIDEBAR_KEYS if k in st.session_state}
-    save_state(
-        nurse_df, off_requests_text, current_settings,
-        weekday_df=weekday_df,
-        off_requests_pref_text=off_requests_pref_text,
-        pair_avoid_night=pair_save_list,
-    )
-
     st.subheader("🚫 夜勤NGペア（任意）")
     st.caption("同じ日の夜勤に入れたくないペア（例: 新人と新人）。ペアを追加していくと、その2人は同日夜勤に入りません。")
 
@@ -1168,6 +1159,15 @@ with tab_main:
     if st.button("➕ ペアを追加", key="pair_add"):
         st.session_state.pair_avoid_count += 1
         st.rerun()
+
+    # 看護師リスト・希望休・サイドバー設定・曜日別人員・夜勤NGペアを自動保存 (再読込で復元される)
+    current_settings = {k: st.session_state[k] for k in SIDEBAR_KEYS if k in st.session_state}
+    save_state(
+        nurse_df, off_requests_text, current_settings,
+        weekday_df=weekday_df,
+        off_requests_pref_text=off_requests_pref_text,
+        pair_avoid_night=pair_save_list,
+    )
 
     st.divider()
     gen_two = st.checkbox("別パターン（パターンB）も同時に生成する", value=True,
