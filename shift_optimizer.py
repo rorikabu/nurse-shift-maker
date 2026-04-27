@@ -161,7 +161,7 @@ SHIFT_DAY = 1     # 日勤
 SHIFT_NIGHT = 2   # 夜勤
 SHIFT_AKE = 3     # 明け (夜勤翌日の休み)
 SHIFTS = [SHIFT_REST, SHIFT_DAY, SHIFT_NIGHT, SHIFT_AKE]
-SHIFT_LABEL = {0: "休", 1: "日", 2: "夜", 3: "明"}
+SHIFT_LABEL = {0: "休", 1: "日", 2: "当", 3: "明"}
 
 # 看護師リストのスキーマ版数。カラム追加・選択肢変更時にインクリメントすると
 # 古いセッションのデータが自動的に初期化される。
@@ -739,7 +739,7 @@ SHIFT_COLORS = {
     "日": "background-color:#B2DFDB; color:#00695C; font-weight:bold; border-radius:8px",      # ミント (爽やかな日中)
     "日AM": "background-color:#A5D6A7; color:#1B5E20; font-weight:bold; border-radius:8px; font-size:0.85em",
     "日PM": "background-color:#80CBC4; color:#004D40; font-weight:bold; border-radius:8px; font-size:0.85em",
-    "夜": "background-color:#7E57C2; color:#FFFFFF; font-weight:bold; border-radius:8px",      # ラベンダー (落ち着いた夜)
+    "当": "background-color:#7E57C2; color:#FFFFFF; font-weight:bold; border-radius:8px",      # ラベンダー (落ち着いた夜)
     "明": "background-color:#FFE0B2; color:#E65100; font-weight:bold; border-radius:8px",      # ピーチ (朝日)
     "休": "background-color:#F8BBD0; color:#AD1457; font-weight:bold; border-radius:8px",      # ピンク (お休み)
 }
@@ -757,11 +757,11 @@ def schedule_to_xlsx_bytes(schedule_df, title=""):
     # シフト→塗り色 (XLSX: ARGB hex without #)
     cell_fill_hex = {
         "日": "B2DFDB", "日AM": "A5D6A7", "日PM": "80CBC4",
-        "夜": "7E57C2", "明": "FFE0B2", "休": "F8BBD0",
+        "当": "7E57C2", "明": "FFE0B2", "休": "F8BBD0",
     }
     text_color_hex = {
         "日": "00695C", "日AM": "1B5E20", "日PM": "004D40",
-        "夜": "FFFFFF", "明": "E65100", "休": "AD1457",
+        "当": "FFFFFF", "明": "E65100", "休": "AD1457",
     }
 
     wb = Workbook()
@@ -834,9 +834,9 @@ def schedule_to_png_bytes(schedule_df, title=""):
     """シフト表を PNG バイト列に変換 (画像保存用)。"""
     # シフト→塗り色 (matplotlib 用に hex のみ)
     cell_fill = {"日": "#B2DFDB", "日AM": "#A5D6A7", "日PM": "#80CBC4",
-                 "夜": "#7E57C2", "明": "#FFE0B2", "休": "#F8BBD0"}
+                 "当": "#7E57C2", "明": "#FFE0B2", "休": "#F8BBD0"}
     text_color = {"日": "#00695C", "日AM": "#1B5E20", "日PM": "#004D40",
-                  "夜": "#FFFFFF", "明": "#E65100", "休": "#AD1457"}
+                  "当": "#FFFFFF", "明": "#E65100", "休": "#AD1457"}
 
     cols = list(schedule_df.columns)
     n_cols = len(cols)
@@ -1434,12 +1434,12 @@ with tab_rules:
     # ---- シフトの種類 ----
     st.markdown("## 🎨 シフトの種類と色分け")
     legend = pd.DataFrame({
-        "シフト": ["日", "日AM", "日PM", "夜", "明", "休"],
+        "シフト": ["日", "日AM", "日PM", "当", "明", "休"],
         "意味": [
             "日勤（日中の出勤・終日）",
             "AM限定の日勤（勤務形態=AMのスタッフ）",
             "PM限定の日勤（勤務形態=PMのスタッフ）",
-            "夜勤（夜の出勤・翌朝まで）",
+            "当直（夜勤）。夜の出勤・翌朝まで",
             "明け（夜勤の翌日。基本休み）",
             "休（完全休日）",
         ],
