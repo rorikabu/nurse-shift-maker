@@ -749,6 +749,87 @@ def style_shift(val):
     return SHIFT_COLORS.get(val, "")
 
 
+def schedule_to_xlsx_bytes(schedule_df, title=""):
+    """シフト表を色付き XLSX バイト列に変換 (Excel ダウンロード用)。"""
+    from openpyxl import Workbook
+    from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+
+    # シフト→塗り色 (XLSX: ARGB hex without #)
+    cell_fill_hex = {
+        "日": "B2DFDB", "日AM": "A5D6A7", "日PM": "80CBC4",
+        "夜": "7E57C2", "明": "FFE0B2", "休": "F8BBD0",
+    }
+    text_color_hex = {
+        "日": "00695C", "日AM": "1B5E20", "日PM": "004D40",
+        "夜": "FFFFFF", "明": "E65100", "休": "AD1457",
+    }
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "シフト表"
+
+    cols = list(schedule_df.columns)
+    n_cols = len(cols)
+    thin = Side(border_style="thin", color="FFFFFF")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    row_offset = 1
+    if title:
+        ws.cell(row=1, column=1, value=title)
+        ws.cell(row=1, column=1).font = Font(bold=True, size=14, color="AD1457")
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=n_cols)
+        row_offset = 2
+
+    # ヘッダ行
+    for j, col in enumerate(cols, start=1):
+        cell = ws.cell(row=row_offset, column=j, value=col)
+        head_fill = "FCE4EC"
+        head_color = "AD1457"
+        if j > 1:
+            if "(土" in col:
+                head_fill = "E3F2FD"; head_color = "1565C0"
+            elif "(日" in col or "祝" in col:
+                head_fill = "FFEBEE"; head_color = "C62828"
+        cell.fill = PatternFill(start_color=head_fill, end_color=head_fill, fill_type="solid")
+        cell.font = Font(bold=True, color=head_color, size=10)
+        cell.alignment = center
+        cell.border = border
+
+    # データ行
+    for i, (_, row) in enumerate(schedule_df.iterrows(), start=row_offset + 1):
+        for j, col in enumerate(cols, start=1):
+            val = "" if pd.isna(row[col]) else str(row[col])
+            cell = ws.cell(row=i, column=j, value=val)
+            cell.alignment = center
+            cell.border = border
+            if j == 1:  # 氏名列
+                cell.fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+                cell.font = Font(bold=True, color="5C4856", size=11)
+                cell.alignment = Alignment(horizontal="left", vertical="center", indent=1)
+            else:
+                fill_hex = cell_fill_hex.get(val)
+                if fill_hex:
+                    cell.fill = PatternFill(start_color=fill_hex, end_color=fill_hex, fill_type="solid")
+                    cell.font = Font(bold=True, color=text_color_hex.get(val, "000000"), size=11)
+
+    # 列幅
+    ws.column_dimensions["A"].width = 14
+    from openpyxl.utils import get_column_letter
+    for j in range(2, n_cols + 1):
+        ws.column_dimensions[get_column_letter(j)].width = 5
+    # 行高
+    for i in range(row_offset, row_offset + len(schedule_df) + 1):
+        ws.row_dimensions[i].height = 26
+
+    # 氏名列を凍結
+    ws.freeze_panes = "B" + str(row_offset + 1)
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
 def schedule_to_png_bytes(schedule_df, title=""):
     """シフト表を PNG バイト列に変換 (画像保存用)。"""
     # シフト→塗り色 (matplotlib 用に hex のみ)
@@ -916,17 +997,20 @@ def render_pattern(solver_, status_, x_, label, nurse_df):
     st.markdown(render_schedule_html(schedule_df), unsafe_allow_html=True)
     st.subheader(f"📈 集計 — {label}")
     st.dataframe(summary_df, use_container_width=True, hide_index=True)
-    col_csv, col_img = st.columns(2)
-    with col_csv:
-        csv = schedule_df.to_csv(index=False).encode("utf-8-sig")
-        st.download_button(
-            f"📥 {label} CSVダウンロード",
-            csv,
-            file_name=f"shift_{year}_{month:02d}_{label.replace(' ', '_')}.csv",
-            mime="text/csv",
-            key=f"dl_csv_{label}",
-            use_container_width=True,
-        )
+    col_xlsx, col_img = st.columns(2)
+    with col_xlsx:
+        try:
+            xlsx_bytes = schedule_to_xlsx_bytes(schedule_df, title=f"シフト表 {year}年{month}月 — {label}")
+            st.download_button(
+                f"📊 {label} Excel(色付き)ダウンロード",
+                xlsx_bytes,
+                file_name=f"shift_{year}_{month:02d}_{label.replace(' ', '_')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key=f"dl_xlsx_{label}",
+                use_container_width=True,
+            )
+        except Exception as e:
+            st.warning(f"Excel生成に失敗: {e}")
     with col_img:
         try:
             png_bytes = schedule_to_png_bytes(schedule_df, title=f"シフト表 {year}年{month}月 — {label}")
