@@ -324,6 +324,17 @@ def build_and_solve(nurse_df, off_requests, *,
                     min_diff_cells=None):
     r = relax or RelaxOptions()
     N, D = num_nurses, num_days
+    # 防御策: data_editor の widget state が古い時、新カラムが欠落することがあるので補完
+    nurse_df = nurse_df.copy()
+    for col, default in [
+        ("役割", "一般"),
+        ("夜勤可", True),
+        ("土日休", False),
+        ("明け後夜勤OK", False),
+        ("最低勤務日数", pd.NA),
+    ]:
+        if col not in nurse_df.columns:
+            nurse_df[col] = default
     eff_min_nights = r.override_min_nights if r.override_min_nights is not None else min_nights
     eff_min_off = r.override_min_off if r.override_min_off is not None else min_off
     eff_max_off = r.override_max_off if r.override_max_off is not None else max_off
@@ -921,7 +932,7 @@ with tab_main:
         },
         use_container_width=True,
         hide_index=True,
-        key="nurse_editor",
+        key=f"nurse_editor_v{NURSE_DF_SCHEMA_VERSION}",
     )
 
     st.subheader("📆 曜日別 必要人員（任意）")
@@ -967,7 +978,7 @@ with tab_main:
             },
             use_container_width=True,
             hide_index=True,
-            key="weekday_editor",
+            key=f"weekday_editor_v{NURSE_DF_SCHEMA_VERSION}",
         )
     # 上のexpanderを開いていない時はセッションから取得
     weekday_df = st.session_state.get("weekday_df", weekday_default)
