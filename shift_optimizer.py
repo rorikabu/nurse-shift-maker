@@ -45,115 +45,127 @@ plt.rcParams["axes.unicode_minus"] = False
 # ==========================================================
 # ページ設定
 # ==========================================================
-st.set_page_config(page_title="助産師シフトメーカー 🌸", layout="wide", page_icon="🩺")
+st.set_page_config(page_title="助産師シフト作成ツール", layout="wide")
 
-# ---- カスタムCSS: ふんわり可愛い看護師テイスト ----
+# ---- カスタムCSS: 業務ツール向け (落ち着いたブルー × ニュートラルグレー基調) ----
 st.markdown(
     """
 <style>
-    /* タイトル: グラデーション風の可愛いピンク */
+    /* タイトル: 控えめなチャコール、左にブルーアクセント */
     h1 {
-        color: #E91E63 !important;
+        color: #0F172A !important;
         font-weight: 700;
-        letter-spacing: 0.02em;
-        background: linear-gradient(90deg, #FCE4EC 0%, #FFFFFF 100%);
-        padding: 0.6rem 1.2rem;
-        border-radius: 18px;
-        border-left: 6px solid #F48FB1;
-        margin-bottom: 0.5rem;
+        letter-spacing: 0.01em;
+        padding: 0.4rem 0.9rem;
+        border-radius: 6px;
+        border-left: 4px solid #2563EB;
+        margin-bottom: 0.4rem;
+        background: #FFFFFF;
     }
     /* 各セクション見出し */
     h2, h3 {
-        color: #C2185B !important;
-        border-bottom: 2px dashed #F8BBD0;
-        padding-bottom: 0.3rem;
-        margin-top: 1.2rem !important;
-    }
-    /* ボタン: 丸くふんわり */
-    .stButton > button {
-        border-radius: 22px !important;
-        border: 2px solid #F48FB1 !important;
-        background: linear-gradient(135deg, #FCE4EC 0%, #F8BBD0 100%) !important;
-        color: #880E4F !important;
-        font-weight: 700 !important;
-        padding: 0.5rem 1.5rem !important;
-        box-shadow: 0 3px 8px rgba(244, 143, 177, 0.25) !important;
-        transition: all 0.2s ease !important;
-    }
-    .stButton > button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 5px 12px rgba(244, 143, 177, 0.4) !important;
-    }
-    .stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #F48FB1 0%, #EC407A 100%) !important;
-        color: white !important;
-    }
-    /* ダウンロードボタン */
-    .stDownloadButton > button {
-        border-radius: 18px !important;
-        background: #B2DFDB !important;
-        border: 2px solid #80CBC4 !important;
-        color: #004D40 !important;
-        font-weight: 600 !important;
-    }
-    /* タブ: 丸くて可愛く */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background: transparent;
-    }
-    .stTabs [data-baseweb="tab"] {
-        background: #FFFFFF;
-        border: 2px solid #F8BBD0;
-        border-radius: 16px 16px 0 0;
-        padding: 0.5rem 1.2rem;
-        color: #C2185B;
+        color: #1E293B !important;
+        border-bottom: 1px solid #CBD5E1;
+        padding-bottom: 0.25rem;
+        margin-top: 1rem !important;
         font-weight: 600;
     }
-    .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #F48FB1 0%, #FCE4EC 100%) !important;
-        color: #880E4F !important;
+    /* ボタン: 角丸控えめ・ニュートラル */
+    .stButton > button {
+        border-radius: 6px !important;
+        border: 1px solid #CBD5E1 !important;
+        background: #FFFFFF !important;
+        color: #1E293B !important;
+        font-weight: 500 !important;
+        padding: 0.45rem 1.1rem !important;
+        box-shadow: none !important;
+        transition: background 0.15s ease, border-color 0.15s ease !important;
     }
-    /* サイドバー: 優しい色 */
+    .stButton > button:hover {
+        background: #F1F5F9 !important;
+        border-color: #94A3B8 !important;
+    }
+    .stButton > button[kind="primary"] {
+        background: #2563EB !important;
+        border-color: #1D4ED8 !important;
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+    }
+    .stButton > button[kind="primary"]:hover {
+        background: #1D4ED8 !important;
+    }
+    /* ダウンロードボタン: 青緑系 (アクセント) */
+    .stDownloadButton > button {
+        border-radius: 6px !important;
+        background: #FFFFFF !important;
+        border: 1px solid #0F766E !important;
+        color: #0F766E !important;
+        font-weight: 500 !important;
+    }
+    .stDownloadButton > button:hover {
+        background: #F0FDFA !important;
+    }
+    /* タブ: 角丸控えめ */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 4px;
+        border-bottom: 1px solid #CBD5E1;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background: #F8FAFC;
+        border: 1px solid #CBD5E1;
+        border-bottom: none;
+        border-radius: 6px 6px 0 0;
+        padding: 0.45rem 1rem;
+        color: #475569;
+        font-weight: 500;
+    }
+    .stTabs [aria-selected="true"] {
+        background: #FFFFFF !important;
+        color: #1E40AF !important;
+        border-color: #CBD5E1 !important;
+        border-bottom: 2px solid #2563EB !important;
+        font-weight: 600;
+    }
+    /* サイドバー: 薄グレー */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #FCE4EC 0%, #FFF8FA 100%) !important;
+        background: #F1F5F9 !important;
+        border-right: 1px solid #CBD5E1;
     }
     section[data-testid="stSidebar"] h1,
     section[data-testid="stSidebar"] h2,
     section[data-testid="stSidebar"] h3 {
-        color: #AD1457 !important;
+        color: #1E293B !important;
+        border-bottom: 1px solid #CBD5E1;
     }
     /* コンテナ・カード */
     div[data-testid="stContainer"] {
-        border-radius: 16px !important;
+        border-radius: 6px !important;
     }
-    /* チェックボックス・スライダーのアクセント色 */
-    .stCheckbox > label > div[role="checkbox"][aria-checked="true"] {
-        background-color: #F48FB1 !important;
-    }
-    /* 各種メッセージ */
+    /* メッセージ */
     div[data-testid="stAlert"] {
-        border-radius: 14px !important;
-        border-left-width: 5px !important;
+        border-radius: 6px !important;
+        border-left-width: 4px !important;
     }
-    /* テーブルの角丸 */
+    /* テーブル */
     .stDataFrame {
-        border-radius: 14px !important;
+        border-radius: 6px !important;
         overflow: hidden;
+        border: 1px solid #CBD5E1;
     }
     /* カードコンテナ (ルール一覧の枠) */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background: #FFFFFF;
-        border-radius: 16px !important;
-        border: 1.5px solid #F8BBD0 !important;
-        box-shadow: 0 2px 6px rgba(244, 143, 177, 0.12);
+        border-radius: 6px !important;
+        border: 1px solid #CBD5E1 !important;
+        box-shadow: none;
     }
 </style>
     """,
     unsafe_allow_html=True,
 )
 
-st.title("🩺 助産師シフトメーカー 🌸")
-st.caption("✨ 2交代制（日勤・夜勤）/ クリニックさん向け / 公平・かんたん・自動でシフト作成 ✨")
+st.title("助産師シフト作成ツール")
+st.caption("2交代制（日勤・夜勤）対応 / 業務向けシフト自動生成")
 
 # シフト定義
 SHIFT_REST = 0    # 休
@@ -282,40 +294,40 @@ if not st.session_state.get("sidebar_loaded"):
     st.session_state.sidebar_loaded = True
 
 with st.sidebar:
-    st.markdown("### 🌷 設定パネル")
-    st.caption("ここをいじって、シフトの条件を決めてね")
+    st.markdown("### 設定")
+    st.caption("基本条件を入力")
 
-    st.header("📅 いつのシフト？")
+    st.header("対象月")
     today = date.today()
     year = st.number_input("年", 2024, 2035, today.year, key="year")
     month = st.number_input("月", 1, 12, today.month, key="month")
     _, num_days = calendar.monthrange(year, month)
-    st.caption(f"🌸 → {num_days}日間")
+    st.caption(f"日数: {num_days}日間")
 
-    st.header("👩‍⚕️ スタッフ人数")
-    num_nurses = st.number_input("看護師さんの人数", 3, 15, 8, key="num_nurses")
+    st.header("スタッフ人数")
+    num_nurses = st.number_input("看護師の人数", 3, 15, 8, key="num_nurses")
 
-    st.header("💉 1日あたりの人員")
-    min_day = st.number_input("☀️ 日勤 最低人数", 1, 10, 3, key="min_day")
-    max_day = st.number_input("☀️ 日勤 上限人数", 1, 15, 6, key="max_day",
+    st.header("1日あたりの必要人員")
+    min_day = st.number_input("日勤 最低人数", 1, 10, 3, key="min_day")
+    max_day = st.number_input("日勤 上限人数", 1, 15, 6, key="max_day",
                               help="1日あたり日勤に入れる最大人数。最低人数以上にしてください。")
-    min_night = st.number_input("🌙 夜勤 最低人数", 1, 5, 1, key="min_night")
-    max_night = st.number_input("🌙 夜勤 上限人数", 1, 5, 2, key="max_night",
+    min_night = st.number_input("夜勤 最低人数", 1, 5, 1, key="min_night")
+    max_night = st.number_input("夜勤 上限人数", 1, 5, 2, key="max_night",
                                 help="1日あたり夜勤に入れる最大人数。最低人数以上にしてください。")
 
-    st.header("💖 労務条件")
-    max_consecutive = st.number_input("📌 連続勤務 上限(日)", 3, 7, 5, key="max_consecutive")
-    max_nights = st.number_input("🌙 月間夜勤 上限(回)", 2, 12, 8, key="max_nights")
-    min_nights = st.number_input("🌙 月間夜勤 下限(回)", 0, 8, 2, key="min_nights")
-    min_off = st.number_input("🌸 月間休日 下限（休のみ）", 4, 14, 8, key="min_off")
-    max_off = st.number_input("🌸 月間休日 上限（休のみ）", 8, 20, 12, key="max_off",
+    st.header("労務条件")
+    max_consecutive = st.number_input("連続勤務 上限(日)", 3, 7, 5, key="max_consecutive")
+    max_nights = st.number_input("月間夜勤 上限(回)", 2, 12, 8, key="max_nights")
+    min_nights = st.number_input("月間夜勤 下限(回)", 0, 8, 2, key="min_nights")
+    min_off = st.number_input("月間休日 下限（休のみ）", 4, 14, 8, key="min_off")
+    max_off = st.number_input("月間休日 上限（休のみ）", 8, 20, 12, key="max_off",
                               help="この日数より多くの「休」を持てない。夜勤しない人の休過剰を防ぐ。")
-    min_workdays = st.number_input("📋 月間 最低勤務日数（夜勤=2日換算・全体既定値）", 0, 40, 16, key="min_workdays",
+    min_workdays = st.number_input("月間 最低勤務日数（夜勤=2日換算・全体既定値）", 0, 40, 16, key="min_workdays",
                                    help="1人あたり月の勤務日数の最低ライン。夜勤は2日(夜+明)としてカウント。看護師リスト「最低勤務日数」列で個別に上書き可。")
-    max_ake_to_night = st.number_input("🌙 明け後夜勤 上限（月間・該当者のみ）", 0, 15, 3, key="max_ake_to_night",
+    max_ake_to_night = st.number_input("明け後夜勤 上限（月間・該当者のみ）", 0, 15, 3, key="max_ake_to_night",
                                        help="「明け後夜勤OK」がONのスタッフが、月のうち何回まで「明け→夜勤」パターンを取れるか。0にすると実質的に特例OFF。")
 
-    st.header("⏱️ 計算スピード")
+    st.header("計算時間")
     time_limit = st.slider("最大計算時間(秒)", 5, 60, 15, key="time_limit")
 
 # ==========================================================
@@ -660,14 +672,14 @@ def diagnose_infeasibility(nurse_df, off_requests):
     night_capacity = n_can_night * max_nights
     if n_can_night == 0:
         issues.append(
-            f"❌ **夜勤できる人がいません**: 「夜勤可」がONのスタッフが0名です。"
+            f"**夜勤できる人がいません**: 「夜勤可」がONのスタッフが0名です。"
             f"必要夜勤 {night_demand}回 を誰も担えません。\n\n"
             f"→ 看護師リストで「夜勤可」をONにしてください。"
         )
     elif night_demand > night_capacity:
         need = -(-night_demand // n_can_night)  # ceil division
         issues.append(
-            f"❌ **夜勤の人手不足**: 月の必要夜勤は **{min_night}人/日 × {D}日 = {night_demand}回** ですが、"
+            f"**夜勤の人手不足**: 月の必要夜勤は **{min_night}人/日 × {D}日 = {night_demand}回** ですが、"
             f"夜勤可能な {n_can_night}名 × 月間夜勤上限 {max_nights}回 = **{night_capacity}回** しか確保できません。\n\n"
             f"→ 夜勤可能なスタッフを増やす、または月間夜勤上限を **{need}回以上** に増やしてください。"
         )
@@ -675,19 +687,19 @@ def diagnose_infeasibility(nurse_df, off_requests):
     # ---- ② 月間夜勤の下限と上限の矛盾 ----
     if n_can_night > 0 and min_nights > max_nights:
         issues.append(
-            f"❌ **月間夜勤の下限({min_nights})が上限({max_nights})を超えています**\n\n"
+            f"**月間夜勤の下限({min_nights})が上限({max_nights})を超えています**\n\n"
             f"→ サイドバーで「月間夜勤 下限」を「上限」以下に下げてください。"
         )
 
     # ---- ②b 1日あたり 最低/上限 の矛盾 ----
     if min_day > max_day:
         issues.append(
-            f"❌ **日勤の最低人数({min_day})が上限({max_day})を超えています**\n\n"
+            f"**日勤の最低人数({min_day})が上限({max_day})を超えています**\n\n"
             f"→ サイドバーで「日勤 最低人数」を「上限人数」以下にしてください。"
         )
     if min_night > max_night:
         issues.append(
-            f"❌ **夜勤の最低人数({min_night})が上限({max_night})を超えています**\n\n"
+            f"**夜勤の最低人数({min_night})が上限({max_night})を超えています**\n\n"
             f"→ サイドバーで「夜勤 最低人数」を「上限人数」以下にしてください。"
         )
 
@@ -697,7 +709,7 @@ def diagnose_infeasibility(nurse_df, off_requests):
     work_demand = (min_day + min_night) * D
     if work_demand > total_capacity:
         issues.append(
-            f"❌ **全体の勤務量が多すぎます**: 必要勤務 (日勤{min_day} + 夜勤{min_night}) × {D}日 = **{work_demand}日分** "
+            f"**全体の勤務量が多すぎます**: 必要勤務 (日勤{min_day} + 夜勤{min_night}) × {D}日 = **{work_demand}日分** "
             f"に対し、{N}名 ×（{D}日 - 月間休日下限 {min_off}）= **{total_capacity}日分** しか勤務余力がありません。\n\n"
             f"→ 看護師を増やす / 月間休日下限を下げる / 必要人員(日勤・夜勤)を減らす"
         )
@@ -716,7 +728,7 @@ def diagnose_infeasibility(nurse_df, off_requests):
                 details.append(f"土日休 {weekend_off_today}名")
             detail_str = "・".join(details) if details else "0名"
             issues.append(
-                f"❌ **{d+1}日({wkd})の人員不足**: {detail_str} で、稼働可能 **{available}名** だが、"
+                f"**{d+1}日({wkd})の人員不足**: {detail_str} で、稼働可能 **{available}名** だが、"
                 f"必要 **{daily_demand}名**（日勤{min_day}+夜勤{min_night}）に届きません。\n\n"
                 f"→ {d+1}日の希望休を分散する、または看護師を増やす"
             )
@@ -726,7 +738,7 @@ def diagnose_infeasibility(nurse_df, off_requests):
         weekend_capacity = N - len(weekend_off_idx)
         if weekend_capacity < daily_demand:
             issues.append(
-                f"❌ **土日の人員不足**: 土日休スタッフが {len(weekend_off_idx)}名いるため、"
+                f"**土日の人員不足**: 土日休スタッフが {len(weekend_off_idx)}名いるため、"
                 f"土日の出勤可能人数は **{weekend_capacity}名** のみ。必要 **{daily_demand}名** に届きません。\n\n"
                 f"→ 土日休のスタッフを減らすか、土日の最低人員を別途設定（要追加機能）"
             )
@@ -735,13 +747,13 @@ def diagnose_infeasibility(nurse_df, off_requests):
 
 
 SHIFT_COLORS = {
-    # 看護師さん向けに、ふんわりパステルでまとめた配色
-    "日": "background-color:#B2DFDB; color:#00695C; font-weight:bold; border-radius:8px",      # ミント (爽やかな日中)
-    "日AM": "background-color:#A5D6A7; color:#1B5E20; font-weight:bold; border-radius:8px; font-size:0.85em",
-    "日PM": "background-color:#80CBC4; color:#004D40; font-weight:bold; border-radius:8px; font-size:0.85em",
-    "当": "background-color:#7E57C2; color:#FFFFFF; font-weight:bold; border-radius:8px",      # ラベンダー (落ち着いた夜)
-    "明": "background-color:#FFE0B2; color:#E65100; font-weight:bold; border-radius:8px",      # ピーチ (朝日)
-    "休": "background-color:#F8BBD0; color:#AD1457; font-weight:bold; border-radius:8px",      # ピンク (お休み)
+    # 業務ツール向け: 彩度を抑えた清潔感のある配色
+    "日":   "background-color:#DBEAFE; color:#1E40AF; font-weight:600; border-radius:4px",
+    "日AM": "background-color:#DCFCE7; color:#166534; font-weight:600; border-radius:4px; font-size:0.85em",
+    "日PM": "background-color:#CFFAFE; color:#155E75; font-weight:600; border-radius:4px; font-size:0.85em",
+    "当":   "background-color:#1E3A8A; color:#FFFFFF; font-weight:600; border-radius:4px",
+    "明":   "background-color:#FEF3C7; color:#92400E; font-weight:600; border-radius:4px",
+    "休":   "background-color:#E2E8F0; color:#475569; font-weight:600; border-radius:4px",
 }
 
 
@@ -754,14 +766,14 @@ def schedule_to_xlsx_bytes(schedule_df, title=""):
     from openpyxl import Workbook
     from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 
-    # シフト→塗り色 (XLSX: ARGB hex without #)
+    # シフト→塗り色 (業務向けニュートラル配色 / XLSX: hex without #)
     cell_fill_hex = {
-        "日": "B2DFDB", "日AM": "A5D6A7", "日PM": "80CBC4",
-        "当": "7E57C2", "明": "FFE0B2", "休": "F8BBD0",
+        "日": "DBEAFE", "日AM": "DCFCE7", "日PM": "CFFAFE",
+        "当": "1E3A8A", "明": "FEF3C7", "休": "E2E8F0",
     }
     text_color_hex = {
-        "日": "00695C", "日AM": "1B5E20", "日PM": "004D40",
-        "当": "FFFFFF", "明": "E65100", "休": "AD1457",
+        "日": "1E40AF", "日AM": "166534", "日PM": "155E75",
+        "当": "FFFFFF", "明": "92400E", "休": "475569",
     }
 
     wb = Workbook()
@@ -777,20 +789,20 @@ def schedule_to_xlsx_bytes(schedule_df, title=""):
     row_offset = 1
     if title:
         ws.cell(row=1, column=1, value=title)
-        ws.cell(row=1, column=1).font = Font(bold=True, size=14, color="AD1457")
+        ws.cell(row=1, column=1).font = Font(bold=True, size=14, color="0F172A")
         ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=n_cols)
         row_offset = 2
 
     # ヘッダ行
     for j, col in enumerate(cols, start=1):
         cell = ws.cell(row=row_offset, column=j, value=col)
-        head_fill = "FCE4EC"
-        head_color = "AD1457"
+        head_fill = "F1F5F9"
+        head_color = "1E293B"
         if j > 1:
             if "(土" in col:
-                head_fill = "E3F2FD"; head_color = "1565C0"
+                head_fill = "EFF6FF"; head_color = "1D4ED8"
             elif "(日" in col or "祝" in col:
-                head_fill = "FFEBEE"; head_color = "C62828"
+                head_fill = "FEF2F2"; head_color = "B91C1C"
         cell.fill = PatternFill(start_color=head_fill, end_color=head_fill, fill_type="solid")
         cell.font = Font(bold=True, color=head_color, size=10)
         cell.alignment = center
@@ -805,7 +817,7 @@ def schedule_to_xlsx_bytes(schedule_df, title=""):
             cell.border = border
             if j == 1:  # 氏名列
                 cell.fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
-                cell.font = Font(bold=True, color="5C4856", size=11)
+                cell.font = Font(bold=True, color="0F172A", size=11)
                 cell.alignment = Alignment(horizontal="left", vertical="center", indent=1)
             else:
                 fill_hex = cell_fill_hex.get(val)
@@ -833,10 +845,10 @@ def schedule_to_xlsx_bytes(schedule_df, title=""):
 def schedule_to_png_bytes(schedule_df, title=""):
     """シフト表を PNG バイト列に変換 (画像保存用)。"""
     # シフト→塗り色 (matplotlib 用に hex のみ)
-    cell_fill = {"日": "#B2DFDB", "日AM": "#A5D6A7", "日PM": "#80CBC4",
-                 "当": "#7E57C2", "明": "#FFE0B2", "休": "#F8BBD0"}
-    text_color = {"日": "#00695C", "日AM": "#1B5E20", "日PM": "#004D40",
-                  "当": "#FFFFFF", "明": "#E65100", "休": "#AD1457"}
+    cell_fill = {"日": "#DBEAFE", "日AM": "#DCFCE7", "日PM": "#CFFAFE",
+                 "当": "#1E3A8A", "明": "#FEF3C7", "休": "#E2E8F0"}
+    text_color = {"日": "#1E40AF", "日AM": "#166534", "日PM": "#155E75",
+                  "当": "#FFFFFF", "明": "#92400E", "休": "#475569"}
 
     cols = list(schedule_df.columns)
     n_cols = len(cols)
@@ -856,7 +868,7 @@ def schedule_to_png_bytes(schedule_df, title=""):
     # タイトル
     if title:
         ax.text(fig_w / 2, 0.25, title, ha="center", va="center",
-                fontsize=12, fontweight="bold", color="#AD1457")
+                fontsize=12, fontweight="bold", color="#0F172A")
 
     # ヘッダ行
     y_header = 0.55
@@ -867,13 +879,13 @@ def schedule_to_png_bytes(schedule_df, title=""):
         else:
             x = name_col_w + (j - 1) * cell_w
             w = cell_w
-        head_color = "#FCE4EC"
-        text_clr = "#AD1457"
+        head_color = "#F1F5F9"
+        text_clr = "#1E293B"
         if j > 0:
             if "(土" in col:
-                head_color = "#E3F2FD"; text_clr = "#1565C0"
+                head_color = "#EFF6FF"; text_clr = "#1D4ED8"
             if "(日" in col or "祝" in col:
-                head_color = "#FFEBEE"; text_clr = "#C62828"
+                head_color = "#FEF2F2"; text_clr = "#B91C1C"
         ax.add_patch(plt.Rectangle((x, y_header), w, cell_h * 0.95,
                                     facecolor=head_color, edgecolor="white", linewidth=1))
         # ヘッダラベル: "1(金)" → "1\n金"
@@ -894,9 +906,9 @@ def schedule_to_png_bytes(schedule_df, title=""):
             if j == 0:
                 x = 0; w = name_col_w
                 ax.add_patch(plt.Rectangle((x, y), w, cell_h * 0.95,
-                                            facecolor="#FFFFFF", edgecolor="#F8BBD0", linewidth=0.5))
+                                            facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=0.5))
                 ax.text(x + 0.1, y + cell_h / 2, val,
-                        ha="left", va="center", fontsize=7, color="#5C4856", fontweight="bold")
+                        ha="left", va="center", fontsize=7, color="#0F172A", fontweight="bold")
             else:
                 x = name_col_w + (j - 1) * cell_w
                 w = cell_w
@@ -921,28 +933,29 @@ def render_schedule_html(schedule_df):
         overflow-x: auto; -webkit-overflow-scrolling: touch;
         max-width: 100%;
     }
-    .shift-table { border-collapse: separate; border-spacing: 3px; font-family: inherit;
+    .shift-table { border-collapse: separate; border-spacing: 2px; font-family: inherit;
                    width: 100%; min-width: 1000px; table-layout: fixed; }
     .shift-table th, .shift-table td {
         text-align: center; padding: 8px 2px; font-size: 1em;
-        border-radius: 8px;
+        border-radius: 4px;
         overflow: hidden; white-space: nowrap;
     }
     .shift-table thead th {
-        background: #FCE4EC; color: #AD1457; font-weight: 700; font-size: 0.85em;
+        background: #F1F5F9; color: #1E293B; font-weight: 600; font-size: 0.85em;
         padding: 6px 2px; line-height: 1.25;
+        border-bottom: 1px solid #CBD5E1;
     }
     .shift-table th.name-col, .shift-table td.name-col {
         text-align: left; padding: 8px 10px; background: #FFFFFF;
-        color: #5C4856; font-weight: 600; width: 90px;
-        border-left: 3px solid #F48FB1;
+        color: #0F172A; font-weight: 600; width: 90px;
+        border-left: 3px solid #2563EB;
         font-size: 0.95em;
         position: sticky; left: 0; z-index: 2;
-        box-shadow: 2px 0 4px rgba(0,0,0,0.08);
+        box-shadow: 2px 0 4px rgba(15, 23, 42, 0.06);
     }
     .shift-table thead th.name-col { z-index: 3; }
-    .shift-table th.wkd-sat { color: #1565C0; background: #E3F2FD; }
-    .shift-table th.wkd-sun, .shift-table th.holiday { color: #C62828; background: #FFEBEE; }
+    .shift-table th.wkd-sat { color: #1D4ED8; background: #EFF6FF; }
+    .shift-table th.wkd-sun, .shift-table th.holiday { color: #B91C1C; background: #FEF2F2; }
     @media (max-width: 768px) {
         .shift-table { min-width: 900px; }
         .shift-table th, .shift-table td { font-size: 0.9em; padding: 6px 1px; }
@@ -990,19 +1003,19 @@ def render_schedule_html(schedule_df):
 def render_pattern(solver_, status_, x_, label, nurse_df):
     """1パターン分のシフト表・集計・CSVダウンロードを画面に出力。"""
     kind = "最適解" if status_ == cp_model.OPTIMAL else "実行可能解"
-    st.success(f"✅ {label} 生成完了 ({kind} / 目的関数値 = {solver_.ObjectiveValue():.0f})")
+    st.success(f"{label} 生成完了 ({kind} / 目的関数値 = {solver_.ObjectiveValue():.0f})")
     schedule_df = build_schedule_df(solver_, x_, nurse_df)
     summary_df = build_summary_df(solver_, x_, nurse_df)
-    st.subheader(f"📊 シフト表 — {label}")
+    st.subheader(f"シフト表 — {label}")
     st.markdown(render_schedule_html(schedule_df), unsafe_allow_html=True)
-    st.subheader(f"📈 集計 — {label}")
+    st.subheader(f"集計 — {label}")
     st.dataframe(summary_df, use_container_width=True, hide_index=True)
     col_xlsx, col_img = st.columns(2)
     with col_xlsx:
         try:
             xlsx_bytes = schedule_to_xlsx_bytes(schedule_df, title=f"シフト表 {year}年{month}月 — {label}")
             st.download_button(
-                f"📊 {label} Excel(色付き)ダウンロード",
+                f"{label} Excel(色付き)ダウンロード",
                 xlsx_bytes,
                 file_name=f"shift_{year}_{month:02d}_{label.replace(' ', '_')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1015,7 +1028,7 @@ def render_pattern(solver_, status_, x_, label, nurse_df):
         try:
             png_bytes = schedule_to_png_bytes(schedule_df, title=f"シフト表 {year}年{month}月 — {label}")
             st.download_button(
-                f"🖼️ {label} 画像(PNG)ダウンロード",
+                f"{label} 画像(PNG)ダウンロード",
                 png_bytes,
                 file_name=f"shift_{year}_{month:02d}_{label.replace(' ', '_')}.png",
                 mime="image/png",
@@ -1029,14 +1042,14 @@ def render_pattern(solver_, status_, x_, label, nurse_df):
 # ==========================================================
 # タブ構成
 # ==========================================================
-tab_main, tab_rules = st.tabs(["💖 シフトを作る", "📖 ルール・使い方"])
+tab_main, tab_rules = st.tabs(["シフト作成", "ルール・使い方"])
 
 # ----------------------------------------------------------
 # タブ1: シフト作成
 # ----------------------------------------------------------
 with tab_main:
-    st.subheader("👩‍⚕️ 看護師さんリスト")
-    st.caption("夜勤可: OFFで夜勤に入らない（パート向け） 🌸 土日休: 土日祝が固定休 / 明け後夜勤OK: 明けの翌日に夜勤可（特例） / 最低勤務日数・夜勤 最低/上限: 空欄で全体値を使用")
+    st.subheader("看護師リスト")
+    st.caption("夜勤可: OFFで夜勤に入らない / 土日休: 土日祝が固定休 / 明け後夜勤OK: 明けの翌日に夜勤可(特例) / 最低勤務日数・夜勤最低/上限: 空欄で全体値を使用")
 
     # 看護師リストの DataFrame は schema_version で管理。
     # 起動時: 保存済み状態があれば復元、無ければデフォルト
@@ -1103,7 +1116,7 @@ with tab_main:
         key=f"nurse_editor_v{NURSE_DF_SCHEMA_VERSION}",
     )
 
-    st.subheader("📆 曜日別 必要人員（任意）")
+    st.subheader("曜日別 必要人員 (任意)")
     st.caption("曜日ごとに「日勤・夜勤」の最低/上限人数を変えられる。空欄/0 ならサイドバーの全体値を使う。")
 
     _na7 = lambda: pd.array([pd.NA] * 7, dtype="Int64")
@@ -1133,7 +1146,7 @@ with tab_main:
         else:
             st.session_state.weekday_df = weekday_default
 
-    with st.expander("📆 曜日別 必要人員を設定する", expanded=False):
+    with st.expander("曜日別 必要人員を設定する", expanded=False):
         weekday_df = st.data_editor(
             st.session_state.weekday_df,
             num_rows="fixed",
@@ -1151,8 +1164,8 @@ with tab_main:
     # 上のexpanderを開いていない時はセッションから取得
     weekday_df = st.session_state.get("weekday_df", weekday_default)
 
-    st.subheader("🌸 希望休の入力")
-    st.caption("🔴 **絶対希望**: 必ず休みになる ／ 🟡 **できれば希望**: 優先するが、人員不足時は出勤になることあり。日付はカンマ区切り（例: `3,10,22`）")
+    st.subheader("希望休の入力")
+    st.caption("**絶対希望**: 必ず休みになる ／ **できれば希望**: 優先するが、人員不足時は出勤になることあり。日付はカンマ区切り (例: 3,10,22)")
 
     # 保存済み希望休テキストを初回のみ session_state に流し込む
     if not st.session_state.get("off_requests_loaded"):
@@ -1181,15 +1194,15 @@ with tab_main:
     for i, name in enumerate(nurse_df["氏名"]):
         with cols[i % len(cols)]:
             st.markdown(f"**{name}**")
-            s_must = st.text_input("🔴 絶対", key=f"off_must_{i}", placeholder="例: 5,12")
-            s_pref = st.text_input("🟡 できれば", key=f"off_pref_{i}", placeholder="例: 19,22")
+            s_must = st.text_input("絶対希望", key=f"off_must_{i}", placeholder="例: 5,12")
+            s_pref = st.text_input("できれば", key=f"off_pref_{i}", placeholder="例: 19,22")
             off_requests_text[str(i)] = s_must
             off_requests_pref_text[str(i)] = s_pref
             off_requests[i] = _parse_days(s_must, name, "絶対")
             off_requests_pref[i] = _parse_days(s_pref, name, "できれば")
 
-    st.subheader("🚫 夜勤NGペア（任意）")
-    st.caption("同じ日の夜勤に入れたくないペア（例: 新人と新人）。ペアを追加していくと、その2人は同日夜勤に入りません。")
+    st.subheader("夜勤NGペア (任意)")
+    st.caption("同じ日の夜勤に入れたくないペア (例: 新人同士)。ペアを追加すると、その2人は同日夜勤に入らない。")
 
     # 保存済みペアを初回のみロード
     if "pair_avoid_count" not in st.session_state:
@@ -1220,7 +1233,7 @@ with tab_main:
                                   label_visibility="collapsed" if idx > 0 else "visible")
         with c3:
             st.write("")  # vertical align
-            if st.button("🗑", key=f"pair_del_{idx}", help="このペアを削除"):
+            if st.button("×", key=f"pair_del_{idx}", help="このペアを削除"):
                 # シンプルに後ろを前に詰める
                 for j in range(idx, st.session_state.pair_avoid_count - 1):
                     st.session_state[f"pair_a_{j}"] = st.session_state.get(f"pair_a_{j+1}", "（未選択）")
@@ -1240,7 +1253,7 @@ with tab_main:
             except ValueError:
                 pass
 
-    if st.button("➕ ペアを追加", key="pair_add"):
+    if st.button("ペアを追加", key="pair_add"):
         st.session_state.pair_avoid_count += 1
         st.rerun()
 
@@ -1254,14 +1267,14 @@ with tab_main:
     )
 
     st.divider()
-    gen_two = st.checkbox("別パターン（パターンB）も同時に生成する", value=True,
+    gen_two = st.checkbox("別パターン (B) も同時に生成", value=True,
                           help="同じ条件でもう1つ別の組み合わせを並べて見られます。生成時間が約1.5倍になります。")
 
-    if st.button("✨ シフトを自動で作る ✨", type="primary", use_container_width=True):
+    if st.button("シフトを自動で作る", type="primary", use_container_width=True):
         # 新規生成時は妥協モードをリセット
         st.session_state.compromise_lv = 0
         st.session_state.last_infeasible = False
-        with st.spinner("最適化中..."):
+        with st.spinner("最適化計算中..."):
             solver, status, x = build_and_solve(
                 nurse_df, off_requests,
                 off_requests_pref=off_requests_pref,
@@ -1279,7 +1292,7 @@ with tab_main:
 
             solver_b = status_b = x_b = None
             if gen_two:
-                with st.spinner("別パターン (B) を生成中..."):
+                with st.spinner("別パターン (B) を計算中..."):
                     solver_b, status_b, x_b = build_and_solve(
                         nurse_df, off_requests,
                         off_requests_pref=off_requests_pref,
@@ -1290,7 +1303,7 @@ with tab_main:
                     )
 
             if gen_two and status_b in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-                tab_a, tab_b = st.tabs(["🌸 パターン A", "🌷 パターン B（別案）"])
+                tab_a, tab_b = st.tabs(["パターン A", "パターン B (別案)"])
                 with tab_a:
                     render_pattern(solver, status, x, "パターン A", nurse_df)
                 with tab_b:
@@ -1312,10 +1325,10 @@ with tab_main:
                     st.info("別パターン (B) は時間内に見つかりませんでした。条件が厳しすぎて代替解が無いか、計算時間が不足しています。")
 
         elif status == cp_model.INFEASIBLE:
-            st.error("❌ 実行不可能 (INFEASIBLE) — 制約が厳しすぎて解がありません")
+            st.error("実行不可能 (INFEASIBLE): 制約が厳しすぎて解がありません")
             issues = diagnose_infeasibility(nurse_df, off_requests)
             if issues:
-                st.markdown("### 🔍 検出された原因（数値で見える矛盾）")
+                st.markdown("### 検出された原因 (数値で見える矛盾)")
                 for issue in issues:
                     st.warning(issue)
             else:
@@ -1323,16 +1336,16 @@ with tab_main:
                 with st.spinner("制約を1つずつ緩めて原因を絞り込み中..."):
                     diag_results = deep_diagnose(nurse_df, off_requests)
 
-                st.markdown("### 🔬 詳細診断: 制約を1つずつ緩めて検証")
-                st.caption("「✅解けた」と出た制約を緩めれば、シフトが組めるようになります。「❌解けず」が並ぶ場合、複数の制約を同時に緩める必要あり。")
+                st.markdown("### 詳細診断: 制約を1つずつ緩めて検証")
+                st.caption("「解けた」と出た制約を緩めれば、シフトが組めるようになります。「解けず」が並ぶ場合、複数の制約を同時に緩める必要あり。")
 
                 feasible_found = False
                 for label, feasible, _ in diag_results:
                     if feasible:
-                        st.success(f"✅ **{label}** → 解けました（→ ここを緩めれば動きます）")
+                        st.success(f"**{label}** → 解けました（→ ここを緩めれば動きます）")
                         feasible_found = True
                     else:
-                        st.error(f"❌ {label} → それでも解けず")
+                        st.error(f"{label} → それでも解けず")
 
                 if not feasible_found:
                     st.warning(
@@ -1343,32 +1356,32 @@ with tab_main:
                         "- 希望休 ＋ 土日休を見直す"
                     )
 
-            # 🤝 妥協モードフラグを立てる (外でUI表示)
+            # 妥協モードフラグを立てる (外でUI表示)
             st.session_state.last_infeasible = True
         else:
-            st.warning(f"⚠️ 時間内に解が見つかりませんでした (status={solver.StatusName(status)}) — 計算時間を延ばすか制約を緩めてください")
+            st.warning(f"時間内に解が見つかりませんでした (status={solver.StatusName(status)}) — 計算時間を延ばすか制約を緩めてください")
 
     # =====================================================
-    # 🤝 妥協モード UI (button click 外: 状態保持できるように)
+    # 妥協モード UI (button click 外: 状態保持できるように)
     # =====================================================
     if st.session_state.get("last_infeasible"):
         st.divider()
-        st.markdown("### 🤝 妥協モードで解を出す")
+        st.markdown("### 妥協モードで解を出す")
         st.caption("制約をレベル別に段階的に緩めて、可能な範囲のベスト解を出します。1段階ずつ確認して進めます。")
 
         current_lv = st.session_state.get("compromise_lv", 0)
 
         lv_descriptions = {
-            0: "🌸 Lv4: 「できれば希望休」のみ妥協（既に試行済みなのでスキップ）→ Lv3 を試すボタン",
-            1: "🌷 **Lv3: 個人希望系を妥協**（絶対希望休・土日休・夜勤NGペア・曜日別人員を無視）",
-            2: "🌼 **Lv2: 労務系も妥協**（月間ノルマ・連勤上限・最低勤務日数・4連勤後夜勤NG・明け3連勤を無視。1日の最低人員だけは死守）",
-            3: "🚧 これ以上は基本人員設定 (1日の最低人員 / 看護師数) を見直してください",
+            0: "Lv4: 「できれば希望休」のみ妥協 (既に試行済みなのでスキップ) → Lv3 を試すボタン",
+            1: "**Lv3: 個人希望系を妥協** (絶対希望休・土日休・夜勤NGペア・曜日別人員を無視)",
+            2: "**Lv2: 労務系も妥協** (月間ノルマ・連勤上限・最低勤務日数・4連勤後夜勤NG・明け3連勤を無視。1日の最低人員だけは死守)",
+            3: "これ以上は基本人員設定 (1日の最低人員 / 看護師数) を見直してください",
         }
 
         # 進める用ボタン
         if current_lv < 3:
             next_lv_label = "Lv3" if current_lv == 0 else "Lv2"
-            if st.button(f"➡️ {next_lv_label} まで緩めて再試行", key=f"compromise_advance_{current_lv}"):
+            if st.button(f"{next_lv_label} まで緩めて再試行", key=f"compromise_advance_{current_lv}"):
                 st.session_state.compromise_lv = current_lv + 1
                 st.rerun()
 
@@ -1383,7 +1396,7 @@ with tab_main:
                 relaxed_labels.append("個人希望系")
             if current_lv >= 2:
                 relaxed_labels.append("労務系")
-            st.warning(f"⚠️ 妥協モード Lv{4-current_lv} 適用中: **{' + '.join(relaxed_labels)}** を無視して解いています")
+            st.warning(f"妥協モード Lv{4-current_lv} 適用中: **{' + '.join(relaxed_labels)}** を無視して解いています")
 
             with st.spinner(f"妥協モード Lv{4-current_lv} で解を生成中..."):
                 solver_c, status_c, x_c = build_and_solve(
@@ -1395,13 +1408,13 @@ with tab_main:
                 )
 
             if status_c in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-                st.success(f"✅ 妥協案が見つかりました（緩和した制約: {len(relaxed_labels)}カテゴリ）")
+                st.success(f"妥協案が見つかりました（緩和した制約: {len(relaxed_labels)}カテゴリ）")
                 render_pattern(solver_c, status_c, x_c, f"妥協案 Lv{4-current_lv}", nurse_df)
             else:
-                st.error(f"❌ Lv{4-current_lv} まで緩めても解けませんでした。次のレベルへ進んでください。")
+                st.error(f"Lv{4-current_lv} まで緩めても解けませんでした。次のレベルへ進んでください。")
 
         if current_lv > 0:
-            if st.button("🔄 妥協モードをリセット", key="compromise_reset"):
+            if st.button("妥協モードをリセット", key="compromise_reset"):
                 st.session_state.compromise_lv = 0
                 st.session_state.last_infeasible = False
                 st.rerun()
@@ -1410,29 +1423,29 @@ with tab_main:
 # タブ2: ルール・使い方
 # ----------------------------------------------------------
 with tab_rules:
-    st.markdown("## 📖 はじめての方へ 🌸")
+    st.markdown("## はじめに")
     st.markdown(
         """
-このツールは、**看護師さんのシフト表（日勤・夜勤・明け・休み）を自動で作るツール** です 💖
+このツールは、**看護師のシフト表（日勤・夜勤・明け・休み）を自動で作るツール** です 
 
 人が手で組むと半日〜1日かかる作業を、コンピューターが **全ルールを守りつつ、なるべく公平に** 振り分けて、数秒〜十数秒で出してくれます。
         """
     )
 
-    st.markdown("### ✨ かんたん4ステップ")
+    st.markdown("### 使い方 (4ステップ)")
     st.markdown(
         """
-1. **左サイドバー** 🌷 で「年・月・人数・必要人員・労務上限」を入力
-2. **シフトを作るタブ** 💖 で「看護師さんの名前・役割・夜勤可否」を編集
-3. 各人の**希望休** 🌸（日付カンマ区切り）を入力
-4. ✨ **「シフトを自動で作る」ボタン** を押す → シフト表が完成（CSV保存もOK）
+1. **左サイドバー**  で「年・月・人数・必要人員・労務上限」を入力
+2. **シフトを作るタブ**  で「看護師の名前・役割・夜勤可否」を編集
+3. 各人の**希望休** （日付カンマ区切り）を入力
+4.  **「シフトを自動で作る」ボタン** を押す → シフト表が完成（CSV保存もOK）
         """
     )
 
     st.divider()
 
     # ---- シフトの種類 ----
-    st.markdown("## 🎨 シフトの種類と色分け")
+    st.markdown("## シフトの種類と色分け")
     legend = pd.DataFrame({
         "シフト": ["日", "日AM", "日PM", "当", "明", "休"],
         "意味": [
@@ -1451,7 +1464,7 @@ with tab_rules:
     st.divider()
 
     # ---- 絶対守るルール ----
-    st.markdown("## ✅ 絶対守るルール（ハード制約・17種類）")
+    st.markdown("## 絶対守るルール (ハード制約・17種類)")
     st.caption("これらは1つでも崩れると「実行不可」となり、シフトが出ません。")
 
     hard_rules = [
@@ -1472,11 +1485,11 @@ with tab_rules:
         ("⑥  「夜勤可」OFFの人は夜勤なし",
          "看護師リストの「夜勤可」のチェックを外した人には、夜勤を一切割り当てない（パート・夜勤不可スタッフ向け）。"),
         ("⑦  「土日休」ONのスタッフは土日・祝日が固定で休み",
-         "看護師リストの「土日休」をONにすると、その月の全ての土曜・日曜・祝日（日本の国民の祝日）が必ず「休」になる（パートさん・育児中スタッフ向け）。金曜夜勤も自動で回避される（土曜が「明け」になり休と矛盾するため）。"),
+         "看護師リストの「土日休」をONにすると、その月の全ての土曜・日曜・祝日（日本の国民の祝日）が必ず「休」になる (パート・育児中スタッフ向け)。金曜夜勤も自動で回避される（土曜が「明け」になり休と矛盾するため）。"),
         ("⑧  絶対希望休は必ず「休」",
-         "🔴「絶対希望」に入力した日は、必ず休みになる。「🟡できれば希望」は別ルール（ソフト制約）で扱う。"),
+         "「絶対希望」に入力した日は、必ず休みになる。「できれば希望」は別ルール（ソフト制約）で扱う。"),
         ("⑧b 夜勤NGペア",
-         "🚫 夜勤NGペアに登録した2人は、同じ日の夜勤に同時に入らない（新人と新人を組ませないなど）。"),
+         " 夜勤NGペアに登録した2人は、同じ日の夜勤に同時に入らない（新人と新人を組ませないなど）。"),
         ("⑨  月間 夜勤 上限",
          "1人あたり月の夜勤回数が上限以下になる（既定: 8回まで）。働きすぎを防ぐ。"),
         ("⑩  月間 夜勤 下限（夜勤可の人のみ）",
@@ -1502,7 +1515,7 @@ with tab_rules:
     st.divider()
 
     # ---- なるべく良くするルール ----
-    st.markdown("## 🎯 なるべく良くするルール（ソフト制約）")
+    st.markdown("## なるべく良くするルール (ソフト制約)")
     st.caption("守れなくてもエラーにはならないが、コンピューターは「守った方が良い」として優先する。")
 
     soft_rules = [
@@ -1512,7 +1525,7 @@ with tab_rules:
          "全員の夜勤回数の差をできるだけ小さくする。"),
         ("純粋な休（休日）の公平性（重み2）",
          "全員の「休」（明けを除く真の休日）の差をできるだけ小さくする。夜勤を取らない人だけ休が極端に多くなるのを防ぐ。"),
-        ("🟡 できれば希望休（重み5）",
+        ("できれば希望休（重み5）",
          "「できれば希望」に入れた日は、なるべく休みになるよう優先する。ただし、人員不足時などは出勤になることがある。"),
     ]
     for title, desc in soft_rules:
@@ -1533,14 +1546,14 @@ with tab_rules:
     st.divider()
 
     # ---- 用語集 ----
-    st.markdown("## 📚 用語集")
+    st.markdown("## 用語集")
     glossary = pd.DataFrame({
         "用語": ["夜勤可", "土日休", "明け後夜勤OK", "明け", "祝日",
                  "ハード制約", "ソフト制約",
                  "目的関数", "最適解 / OPTIMAL", "実行可能解 / FEASIBLE", "実行不可能 / INFEASIBLE"],
         "意味": [
             "夜勤OKかどうかのチェック。外すと夜勤に入らない（パート・夜勤不可スタッフ向け）。",
-            "ONにすると、その月の全土曜・日曜・祝日が固定で休みになる（パートさん・育児中など）。金曜夜勤も自動で除外される。",
+            "ONにすると、その月の全土曜・日曜・祝日が固定で休みになる (パート・育児中など)。金曜夜勤も自動で除外される。",
             "ONにすると、夜勤明けの翌日に夜勤を入れる特例が許される。通常は「夜→明→休」で固定だが、これを解除するフラグ。月間の回数はサイドバー「明け後夜勤 上限」で制限される。",
             "夜勤の翌日。出勤扱いではなく休み。",
             "日本の国民の祝日。シフト表の列名に「・祝」と表示される。「土日休」ONスタッフは祝日も自動で休みになる。",
@@ -1557,7 +1570,7 @@ with tab_rules:
     st.divider()
 
     # ---- 困った時 ----
-    st.markdown("## 🆘 うまく作れない時のヒント")
+    st.markdown("## うまく作れない時のヒント")
     st.markdown(
         """
 **「実行不可能 (INFEASIBLE)」と出る場合**、以下の組み合わせがよくある原因です。
@@ -1582,7 +1595,7 @@ with tab_rules:
     st.divider()
 
     # ---- 現在の設定 ----
-    st.markdown("## ⚙️ 現在の設定値（サイドバーで変更）")
+    st.markdown("## 現在の設定値 (サイドバーで変更)")
     settings = pd.DataFrame({
         "項目": ["対象月", "日数", "看護師数",
                  "日勤 最低/上限", "夜勤 最低/上限",
@@ -1603,7 +1616,7 @@ with tab_rules:
     st.divider()
 
     # ---- 数学的詳細 ----
-    with st.expander("🔢 数式で見る詳細仕様（上級者向け）"):
+    with st.expander("数式で見る詳細仕様 (上級者向け)"):
         st.markdown(
             r"""
 **変数:** `x[n, d, s] ∈ {0, 1}`  （看護師 n が 日 d に シフト s を担当）
@@ -1647,13 +1660,13 @@ Z = 3 × (max_workdays - min_workdays)
 # フッター
 # ==========================================================
 st.sidebar.divider()
-with st.sidebar.expander("🧹 保存データ管理"):
+with st.sidebar.expander("保存データ管理"):
     st.caption(f"保存先: `{STATE_FILE.name}`")
     if STATE_FILE.exists():
-        st.caption(f"✓ 保存済み（最終更新: {datetime.fromtimestamp(STATE_FILE.stat().st_mtime).strftime('%Y-%m-%d %H:%M')}）")
+        st.caption(f" 保存済み（最終更新: {datetime.fromtimestamp(STATE_FILE.stat().st_mtime).strftime('%Y-%m-%d %H:%M')}）")
     else:
         st.caption("まだ保存ファイルなし")
-    if st.button("🗑️ 保存をリセット", help="看護師リスト・希望休・サイドバー設定を初期状態に戻します"):
+    if st.button("保存をリセット", help="看護師リスト・希望休・サイドバー設定を初期状態に戻します"):
         clear_saved_state()
         # セッション状態もクリアして完全初期化
         reset_keys = set(SIDEBAR_KEYS) | {"nurse_df", "nurse_df_schema", "off_requests_loaded", "sidebar_loaded"}
@@ -1662,5 +1675,5 @@ with st.sidebar.expander("🧹 保存データ管理"):
                 del st.session_state[key]
         st.rerun()
 
-st.sidebar.caption("🌸 v1.3 / 自動保存対応 🌸")
-st.sidebar.caption("毎日おつかれさまです 💖")
+st.sidebar.caption("v1.4 / Business edition")
+st.sidebar.caption("")
